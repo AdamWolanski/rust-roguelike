@@ -1,6 +1,7 @@
 mod components;
 mod player;
 mod map;
+mod rect;
 
 use rltk::{Rltk, RltkBuilder, GameState};
 use specs::prelude::*;
@@ -8,7 +9,7 @@ use specs::prelude::*;
 pub use components::*;
 pub use player::*;
 pub use map::*;
-
+pub use rect::*;
 
 pub struct State {
     ecs : World,
@@ -70,12 +71,14 @@ fn main() -> rltk::BError {
 
     components_register(&mut game_state);
 
-    game_state.ecs.insert(new_map_create());
+    let (rooms, map) = map::new_map_rooms_and_corridors();
+    game_state.ecs.insert(map);
+    let (player_x, player_y) = rooms[0].center();
 
     game_state.ecs
         .create_entity()
         .with(Position{
-            x:10, y:10
+            x:player_x, y:player_y
         })
         .with(Renderable{
             glyph: rltk::to_cp437('@'),

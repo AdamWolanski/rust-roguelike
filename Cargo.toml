@@ -7,4 +7,4 @@ specs-derive = "0.4.1"
 authors = ["awolanski <adam.wolanski94@gmail.com>"]
 edition = "2018"
 name = "rust-roguelike"
-version = "0.1.2"
+version = "0.1.3"
