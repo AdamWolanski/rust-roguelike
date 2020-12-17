@@ -28,12 +28,12 @@ impl GameState for State {
         
         player_input(self, ctx);
         self.run_systems();
-        let map = self.ecs.fetch::<Vec<TileType>>();
+        let map = self.ecs.fetch::<Map>();
         map_draw(&map, ctx);
         
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
-        
+
         for (pos, rend) in (&positions, &renderables).join() {
             ctx.set(pos.x, pos.y, rend.fg, rend.bg, rend.glyph);
         }
@@ -71,9 +71,9 @@ fn main() -> rltk::BError {
 
     components_register(&mut game_state);
 
-    let (rooms, map) = map::new_map_rooms_and_corridors();
+    let map = Map::new_map_rooms_and_corridors();
+    let (player_x, player_y) = map.rooms[0].center();
     game_state.ecs.insert(map);
-    let (player_x, player_y) = rooms[0].center();
 
     game_state.ecs
         .create_entity()
