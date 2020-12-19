@@ -2,6 +2,7 @@ mod components;
 mod player;
 mod map;
 mod rect;
+mod fov_system;
 
 use rltk::{Rltk, RltkBuilder, GameState};
 use specs::prelude::*;
@@ -9,7 +10,8 @@ use specs::prelude::*;
 pub use components::*;
 pub use player::*;
 pub use map::*;
-pub use rect::*;
+pub use rect::Rect;
+pub use fov_system::FovSystem;
 
 pub struct State {
     ecs : World,
@@ -17,19 +19,21 @@ pub struct State {
 impl State {
     fn run_systems(&mut self) {
         let mut lw = LeftMover;
+        let mut fov_sys = fov_system::FovSystem;
+
+        fov_sys.run_now(&self.ecs);
         lw.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
 impl GameState for State {
     fn tick(&mut self, ctx : &mut Rltk) {
-        
+
         ctx.cls();
-        
+
         player_input(self, ctx);
         self.run_systems();
-        let map = self.ecs.fetch::<Map>();
-        map_draw(&map, ctx);
+        map_draw(&self.ecs, ctx);
         
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
@@ -58,6 +62,7 @@ fn components_register(gs : &mut State) {
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<LeftMover>();
     gs.ecs.register::<Player>();
+    gs.ecs.register::<Fov>();
 }
 
 fn main() -> rltk::BError {
@@ -87,6 +92,10 @@ fn main() -> rltk::BError {
         })
         //.with(LeftMover)
         .with(Player)
+        .with(Fov {
+            visible_tiles: Vec::new(),
+            range: 8,
+        })
         .build();
 
     rltk::main_loop(context, game_state)

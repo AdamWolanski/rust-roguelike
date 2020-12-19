@@ -19,3 +19,9 @@ pub struct Player;
 
 #[derive(Component)]
 pub struct LeftMover;
+
+#[derive(Component)]
+pub struct Fov {
+    pub visible_tiles : Vec<rltk::Point>,
+    pub range : i32,
+}
