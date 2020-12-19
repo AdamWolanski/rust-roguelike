@@ -16,19 +16,28 @@ impl<'a> System<'a> for FovSystem {
         let (mut map, entities, mut viewshed, pos, player) = data;
 
         for (e, viewshed, pos) in (&entities, &mut viewshed, &pos).join() {
-            viewshed.visible_tiles.clear();
-            viewshed.visible_tiles = field_of_view(Point::new(pos.x, pos.y),
-                                                    viewshed.range, &*map);
-            viewshed.visible_tiles.retain(|p| p.x >= 0 &&
-                                              p.x <  map.width as i32 &&
-                                              p.y >= 0 &&
-                                              p.y <  map.width as i32);
+            if viewshed.dirty {
+                viewshed.dirty = false;
+                viewshed.visible_tiles.clear();
+                viewshed.visible_tiles = field_of_view(Point::new(pos.x, pos.y),
+                                                        viewshed.range, &*map);
+                viewshed.visible_tiles.retain(|p| p.x >= 0 &&
+                                                  p.x <  map.width as i32 &&
+                                                  p.y >= 0 &&
+                                                  p.y <  map.width as i32);
+    
+                let p : Option<&Player> = player.get(e);
+                if let Some(_tmp) = p {
 
-            let p : Option<&Player> = player.get(e);
-            if let Some(_tmp) = p {
-                for v in viewshed.visible_tiles.iter() {
-                    let idx = map.xy_idx(v.x, v.y);
-                    map.revealed_tiles[idx] = true;
+                    for t in map.visible_tiles.iter_mut() {
+                        *t = false;
+                    }
+
+                    for v in viewshed.visible_tiles.iter() {
+                        let idx = map.xy_idx(v.x, v.y);
+                        map.revealed_tiles[idx] = true;
+                        map.visible_tiles[idx] = true;
+                    }
                 }
             }
         }

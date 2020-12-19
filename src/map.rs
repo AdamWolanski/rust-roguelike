@@ -19,6 +19,7 @@ pub struct Map {
     pub width : u32,
     pub height : u32,
     pub revealed_tiles: Vec<bool>,
+    pub visible_tiles: Vec<bool>,
 }
 
 impl Map {
@@ -34,6 +35,7 @@ impl Map {
             width : 80,
             height : 50,
             revealed_tiles : vec![false; 80*50],
+            visible_tiles : vec![false; 80*50],
         };
     
         const MAX_ROOMS: i32 = 30;
@@ -126,21 +128,25 @@ pub fn map_draw(ecs: &World, ctx: &mut rltk::Rltk) {
 
     for (idx,tile) in map.tiles.iter().enumerate() {
         if map.revealed_tiles[idx] {
+            let mut fg;
+            let glyph;
+
             match tile {
                 TileType::Floor => {
-                    ctx.set(x, y,
-                        rltk::RGB::from_f32(0.5,0.5,0.5),
-                        rltk::RGB::from_f32(0.,0.,0.),
-                        rltk::to_cp437('.'));
+                    glyph = rltk::to_cp437('.');
+                    fg = rltk::RGB::from_f32(0.0, 0.5, 0.5);
                 }
                 TileType::Wall => {
-                    ctx.set(x, y,
-                        rltk::RGB::from_f32(0.0,1.0,0.0),
-                        rltk::RGB::from_f32(0.,0.,0.),
-                        rltk::to_cp437('#'));
+                    glyph = rltk::to_cp437('#');
+                    fg = rltk::RGB::from_f32(0.0, 1.0, 0.0);
                 }
             }
+            if !map.visible_tiles[idx] {
+                fg = fg.to_greyscale();
+            }
+            ctx.set(x, y, fg, rltk::RGB::from_f32(0.,0.,0.), glyph);
         }
+        
 
         x += 1;
         if x > (map.width - 1) {

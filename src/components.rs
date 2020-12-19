@@ -24,4 +24,5 @@ pub struct LeftMover;
 pub struct Fov {
     pub visible_tiles : Vec<rltk::Point>,
     pub range : i32,
+    pub dirty : bool,
 }

@@ -95,6 +95,7 @@ fn main() -> rltk::BError {
         .with(Fov {
             visible_tiles: Vec::new(),
             range: 8,
+            dirty: true,
         })
         .build();
 
