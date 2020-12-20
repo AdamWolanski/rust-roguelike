@@ -26,3 +26,6 @@ pub struct Fov {
     pub range : i32,
     pub dirty : bool,
 }
+
+#[derive(Component)]
+pub struct Enemy;

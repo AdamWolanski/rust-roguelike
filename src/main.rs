@@ -37,9 +37,13 @@ impl GameState for State {
         
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
+        let map = self.ecs.fetch::<Map>();
 
         for (pos, rend) in (&positions, &renderables).join() {
-            ctx.set(pos.x, pos.y, rend.fg, rend.bg, rend.glyph);
+            let idx = map.xy_idx(pos.x, pos.y);
+            if map.visible_tiles[idx] {
+                ctx.set(pos.x, pos.y, rend.fg, rend.bg, rend.glyph);
+            }
         }
     }
 }
@@ -63,25 +67,39 @@ fn components_register(gs : &mut State) {
     gs.ecs.register::<LeftMover>();
     gs.ecs.register::<Player>();
     gs.ecs.register::<Fov>();
+    gs.ecs.register::<Enemy>();
 }
 
 fn main() -> rltk::BError {
     let context = RltkBuilder::simple80x50()
         .with_title("Roguelike Tutorial")
         .build()?;
-
     let mut game_state = State {
         ecs : World::new()
     };
-
-    components_register(&mut game_state);
-
     let map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
-    game_state.ecs.insert(map);
 
-    game_state.ecs
-        .create_entity()
+    
+    components_register(&mut game_state);
+    
+    for room in map.rooms.iter().skip(1) {
+        let(x,y) = room.center();
+        game_state.ecs.create_entity()
+            .with(Position{ x, y})
+            .with(Renderable{
+                glyph: rltk::to_cp437('E'),
+                fg: rltk::RGB::named(rltk::RED),
+                bg: rltk::RGB::named(rltk::BLACK),})
+            .with(Fov {
+                    visible_tiles: Vec::new(),
+                    range: 8,
+                    dirty: true,})
+            .with(Enemy)
+            .build();
+    }
+
+    game_state.ecs.create_entity()
         .with(Position{
             x:player_x, y:player_y
         })
@@ -98,6 +116,7 @@ fn main() -> rltk::BError {
             dirty: true,
         })
         .build();
-
+    
+    game_state.ecs.insert(map);
     rltk::main_loop(context, game_state)
 }
