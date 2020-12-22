@@ -3,6 +3,7 @@ mod player;
 mod map;
 mod rect;
 mod fov_system;
+mod enemy_ai_system;
 
 use rltk::{Rltk, RltkBuilder, GameState};
 use specs::prelude::*;
@@ -12,17 +13,28 @@ pub use player::*;
 pub use map::*;
 pub use rect::Rect;
 pub use fov_system::FovSystem;
+pub use enemy_ai_system::EnemyAISystem;
+
+#[derive(PartialEq)]
+pub enum RunState {
+    Paused,
+    Running
+}
 
 pub struct State {
     ecs : World,
+    run_state : RunState,
 }
 impl State {
     fn run_systems(&mut self) {
         let mut lw = LeftMover;
         let mut fov_sys = fov_system::FovSystem;
+        let mut ai_sys = enemy_ai_system::EnemyAISystem;
 
         fov_sys.run_now(&self.ecs);
         lw.run_now(&self.ecs);
+        ai_sys.run_now(&self.ecs);
+
         self.ecs.maintain();
     }
 }
@@ -31,8 +43,13 @@ impl GameState for State {
 
         ctx.cls();
 
-        player_input(self, ctx);
-        self.run_systems();
+        if self.run_state == RunState::Running {
+            self.run_systems();
+            self.run_state = RunState::Paused;
+        } else {
+            self.run_state = player_input(self, ctx);
+        }
+
         map_draw(&self.ecs, ctx);
         
         let positions = self.ecs.read_storage::<Position>();
@@ -75,14 +92,14 @@ fn main() -> rltk::BError {
         .with_title("Roguelike Tutorial")
         .build()?;
     let mut game_state = State {
-        ecs : World::new()
+        ecs: World::new(),
+        run_state: RunState::Running,
     };
     let map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
 
-    
     components_register(&mut game_state);
-    
+
     for room in map.rooms.iter().skip(1) {
         let(x,y) = room.center();
         game_state.ecs.create_entity()
