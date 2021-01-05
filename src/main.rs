@@ -5,7 +5,7 @@ mod rect;
 mod fov_system;
 mod enemy_ai_system;
 
-use rltk::{Rltk, RltkBuilder, GameState};
+use rltk::{Rltk, RltkBuilder, GameState, Point};
 use specs::prelude::*;
 
 pub use components::*;
@@ -134,6 +134,7 @@ fn main() -> rltk::BError {
         })
         .build();
     
+    game_state.ecs.insert(Point::new(player_x, player_y));
     game_state.ecs.insert(map);
     rltk::main_loop(context, game_state)
 }

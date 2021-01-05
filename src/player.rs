@@ -1,4 +1,4 @@
-use super::{Position, Player, TileType, Map, State, Fov, RunState};
+use super::{Position, Player, TileType, Map, State, Fov, RunState, Point};
 use specs::prelude::*;
 use std::cmp::{min, max};
 
@@ -18,6 +18,10 @@ pub fn player_move(delta_x: i32, delta_y: i32, ecs: &mut World) {
             position.y = min((SCREEN_HEIGHT - 1) as i32, max(0, position.y + delta_y));
 
             fov.dirty = true;
+
+            let mut ppos = ecs.write_resource::<Point>();
+            ppos.x = position.x;
+            ppos.y = position.y;
         }
     }
 }
